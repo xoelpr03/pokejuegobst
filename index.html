@@ -142,29 +142,46 @@
 </div>
 
 <script>
-    let currentScore = 0;
-    let bestScore = localStorage.getItem('pokeStatBest') || 0;
+   let currentScore = 0;
+    let bestScore = localStorage.getItem('pokeStatBestFinal') || 0;
     let targetPoke = null;
 
-    const STAT_LABELS = {
-        'hp': 'HP', 'attack': 'ATK', 'defense': 'DEF', 
-        'special-attack': 'SPA', 'special-defense': 'SPD', 'speed': 'SPE'
-    };
+    const STAT_LABELS = { 'hp': 'HP', 'attack': 'ATK', 'defense': 'DEF', 'special-attack': 'SPA', 'special-defense': 'SPD', 'speed': 'SPE' };
 
     function getStatColor(val) {
-        if (val <= 40) return '#ef4444'; // Red
-        if (val <= 60) return '#f97316'; // Orange
-        if (val <= 80) return '#eab308'; // Yellow
-        if (val <= 100) return '#a3e635'; // Light Green
-        if (val <= 130) return '#22c55e'; // Green
-        if (val <= 150) return '#3b82f6'; // Blue
-        return '#a855f7'; // Purple (151+)
+        if (val <= 40) return '#ef4444';
+        if (val <= 60) return '#f97316';
+        if (val <= 80) return '#eab308';
+        if (val <= 100) return '#a3e635';
+        if (val <= 130) return '#22c55e';
+        if (val <= 150) return '#3b82f6';
+        return '#a855f7';
     }
 
-    function updateScoreUI() {
-        document.getElementById('best-score').innerText = bestScore;
-        document.getElementById('menu-best-score').innerText = bestScore;
-        document.getElementById('current-score').innerText = currentScore;
+    async function isFullyEvolved(id) {
+        try {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+            const data = await res.json();
+            const evoRes = await fetch(data.evolution_chain.url);
+            const evoData = await evoRes.json();
+            
+            let current = evoData.chain;
+            // Traverse to find the current species in the chain
+            while (current && current.species.name !== data.name) {
+                let found = false;
+                for(let branch of current.evolves_to) {
+                    // Check if current species is in this branch's sub-tree
+                    if (JSON.stringify(branch).includes(`"${data.name}"`)) {
+                        current = branch;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) break;
+            }
+            // If it has no "evolves_to" array elements, it is the final form
+            return current.evolves_to.length === 0;
+        } catch { return false; }
     }
 
     async function initStatsGame() {
@@ -173,47 +190,40 @@
         const optionsDiv = document.getElementById('game-options');
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
-        
-        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-weight:700; font-variant: small-caps;'>Analyzing Stats...</div>";
+        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-weight:700; font-variant: small-caps;'>Searching Final Forms...</div>";
         optionsDiv.innerHTML = ""; 
 
         try {
-            const targetId = Math.floor(Math.random() * 898) + 1;
-            const targetRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetId}`);
-            targetPoke = await targetRes.json();
+            let targetFound = false;
+            while(!targetFound) {
+                const rId = Math.floor(Math.random() * 600) + 1; // Faster search in early gens
+                if (await isFullyEvolved(rId)) {
+                    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
+                    targetPoke = await res.json();
+                    targetFound = true;
+                }
+            }
 
             let bst = 0;
             let statHtml = '<div class="stat-display">';
             targetPoke.stats.forEach(s => {
                 const val = s.base_stat;
-                const label = STAT_LABELS[s.stat.name];
                 const color = getStatColor(val);
                 bst += val;
-                const percent = Math.min(100, (val / 160) * 100); 
-                
-                statHtml += `
-                    <div class="stat-row">
-                        <span class="stat-label">${label}</span>
-                        <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${percent}%; background:${color};"></div></div>
-                        <span class="stat-val">${val}</span>
-                    </div>
-                `;
+                statHtml += `<div class="stat-row"><span class="stat-label">${STAT_LABELS[s.stat.name]}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${Math.min(100, (val/160)*100)}%; background:${color};"></div></div><span class="stat-val">${val}</span></div>`;
             });
             statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
             statsDiv.innerHTML = statHtml;
 
             let choices = [targetPoke];
-            let attempts = 0;
-            while(choices.length < 4 && attempts < 60) {
-                attempts++;
+            while(choices.length < 4) {
                 const rId = Math.floor(Math.random() * 898) + 1;
                 if(choices.some(c => c.id === rId)) continue;
-                
                 const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
                 const p = await res.json();
                 const pBst = p.stats.reduce((acc, s) => acc + s.base_stat, 0);
-                
-                if(Math.abs(pBst - bst) <= 25) { choices.push(p); }
+                // For impostors, we check if they are within BST range and fully evolved
+                if(Math.abs(pBst - bst) <= 40 && await isFullyEvolved(rId)) { choices.push(p); }
             }
 
             choices.sort(() => Math.random() - 0.5).forEach(p => {
@@ -222,34 +232,27 @@
                 b.innerHTML = `<img src="${p.sprites.front_default}"><span>${p.name.replace(/-/g,' ')}</span>`;
                 b.onclick = () => {
                     if(p.id === targetPoke.id) {
-                        b.style.borderColor = "#10b981"; b.style.background = "#f0fdf4";
                         currentScore++;
-                        if(currentScore > bestScore) { 
-                            bestScore = currentScore; 
-                            localStorage.setItem('pokeStatBest', bestScore); 
-                        }
-                        updateScoreUI(); setTimeout(initStatsGame, 600);
+                        if(currentScore > bestScore) { bestScore = currentScore; localStorage.setItem('pokeStatBestFinal', bestScore); }
+                        document.getElementById('current-score').innerText = currentScore;
+                        initStatsGame();
                     } else { showGameOver(); }
                 };
                 optionsDiv.appendChild(b);
             });
-
-        } catch(e) { statsDiv.innerHTML = "Connection Error."; }
+        } catch(e) { statsDiv.innerHTML = "Error."; }
     }
 
     function showGameOver() {
         document.getElementById('correct-name').innerText = targetPoke.name.replace(/-/g, ' ');
         document.getElementById('correct-img').src = targetPoke.sprites.front_default;
         document.getElementById('overlay').style.display = 'flex';
-        currentScore = 0; updateScoreUI();
+        currentScore = 0; document.getElementById('current-score').innerText = 0;
     }
 
-    function stopGame() {
-        document.getElementById('game-container').style.display = 'none';
-        document.getElementById('main-menu').style.display = 'block';
-    }
-    updateScoreUI();
+    function stopGame() { document.getElementById('game-container').style.display = 'none'; document.getElementById('main-menu').style.display = 'block'; }
+    document.getElementById('menu-best-score').innerText = bestScore;
+    document.getElementById('best-score').innerText = bestScore;
 </script>
 </body>
-
 </html>
