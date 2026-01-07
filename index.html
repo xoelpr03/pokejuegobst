@@ -286,6 +286,17 @@ const STAT_LABELS = {
     'special-attack': 'SPA', 'special-defense': 'SPD', speed: 'SPE'
 };
 
+// Helper: Calculate BST
+const calcBST = (p) => p.stats.reduce((acc, s) => acc + s.base_stat, 0);
+
+// Helper: Calculate "Spread Similarity" (Standard Deviation of stats)
+// Hard mode uses this to find pokemon with similar peaks and valleys
+const getSpreadScore = (p) => {
+    const values = p.stats.map(s => s.base_stat);
+    const avg = values.reduce((a, b) => a + b) / 6;
+    return Math.sqrt(values.map(x => Math.pow(x - avg, 2)).reduce((a, b) => a + b) / 6);
+};
+
 function getStatColor(val) {
     if (val <= 50) return '#ef4444';
     if (val <= 80) return '#f59e0b';
@@ -312,27 +323,43 @@ async function initStatsGame() {
     statsDiv.innerHTML = "<div style='padding:20px;color:#94a3b8;'>Loading...</div>";
     optionsDiv.innerHTML = "";
 
-    // 1. Get the target Pokémon (the stats the user sees)
+    // 1. Get Target
     const id = Math.floor(Math.random() * 800) + 1;
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
     targetPoke = await res.json();
+    const targetBST = calcBST(targetPoke);
+    const targetSpread = getSpreadScore(targetPoke);
 
     renderStats(targetPoke, statsDiv);
 
-    // 2. Start the choices list with the CORRECT Pokémon
-    const choices = [targetPoke]; 
+    const choices = [targetPoke];
 
-    // 3. Add 3 more WRONG Pokémon to the list
+    // 2. Filter for Difficulty
     while (choices.length < 4) {
         const cid = Math.floor(Math.random() * 800) + 1;
-        // Don't add the same Pokémon twice
-        if (cid === targetPoke.id) continue; 
-        
+        if (cid === targetPoke.id) continue;
+
         const p = await fetch(`https://pokeapi.co/api/v2/pokemon/${cid}`).then(r => r.json());
-        if (!choices.find(c => c.id === p.id)) choices.push(p);
+        const pBST = calcBST(p);
+        const pSpread = getSpreadScore(p);
+
+        let isQualified = false;
+
+        if (currentGameMode === 'easy') {
+            isQualified = true; // Any random pokemon
+        } else if (currentGameMode === 'medium') {
+            // Must have BST within +/- 30 of target
+            isQualified = Math.abs(targetBST - pBST) <= 30;
+        } else if (currentGameMode === 'hard') {
+            // Must have BST within +/- 15 AND similar spread (standard deviation)
+            isQualified = Math.abs(targetBST - pBST) <= 15 && Math.abs(targetSpread - pSpread) <= 10;
+        }
+
+        if (isQualified && !choices.find(c => c.id === p.id)) {
+            choices.push(p);
+        }
     }
 
-    // 4. Shuffle the choices so the correct one isn't always first
     choices.sort(() => Math.random() - 0.5).forEach(p => {
         const b = document.createElement('button');
         b.className = 'option-btn';
@@ -390,4 +417,5 @@ function stopGame() {
 
 </body>
 </html>
+
 
