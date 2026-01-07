@@ -36,6 +36,20 @@
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
+    /* --- GAME UI --- */
+    .game-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 15px; font-size: 11px; font-weight: 800; font-variant: small-caps;
+    }
+
+    .exit-small-btn {
+        background: #fee2e2; color: #ef4444; border: none;
+        padding: 4px 10px; border-radius: 8px; cursor: pointer;
+        font-weight: 900; font-size: 10px; transition: opacity 0.2s;
+    }
+
+    .exit-small-btn:hover { opacity: 0.8; }
+
     .stat-display {
         background: #f8fafc; padding: 15px; border-radius: 20px;
         margin-bottom: 20px; border: 1px solid #e2e8f0; min-height: 180px;
@@ -56,6 +70,7 @@
         color: white; border-radius: 10px; font-size: 12px; margin-top: 10px; font-weight: 800;
     }
 
+    /* --- BUTTONS --- */
     .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
     .menu-btn {
         display: flex; align-items: center; justify-content: center;
@@ -67,7 +82,7 @@
     .mode-easy { background: #10b981; color: white; }
     .mode-med { background: #f59e0b; color: white; }
     .mode-hard { background: #ef4444; color: white; }
-    .exit-btn { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; margin-top: 10px;}
+    .exit-link-btn { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; margin-top: 10px;}
 
     .option-btn {
         display: flex; align-items: center; gap: 15px;
@@ -78,7 +93,6 @@
     }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
     .option-btn img { width: 50px; height: 50px; image-rendering: pixelated; }
     .option-btn span { font-size: 15px; font-weight: 700; color: #334155; }
 
@@ -103,27 +117,30 @@
     <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
     <h1 class="menu-title">Stat Master</h1>
     <div class="btn-group">
-        <button class="menu-btn mode-easy" onclick="startGame('easy')">Easy (Any)</button>
-        <button class="menu-btn mode-med" onclick="startGame('medium')">Medium (BST Link)</button>
-        <button class="menu-btn mode-hard" onclick="startGame('hard')">Hard (Cloned Stats)</button>
-        <a href="https://xoelpr03.github.io/dexv1.1/" class="menu-btn exit-btn">Return to Dex</a>
+        <button class="menu-btn mode-easy" onclick="startGame('easy')">Easy</button>
+        <button class="menu-btn mode-med" onclick="startGame('medium')">Medium</button>
+        <button class="menu-btn mode-hard" onclick="startGame('hard')">Hard</button>
+        <a href="https://xoelpr03.github.io/dexv1.1/" class="menu-btn exit-link-btn">Return to Dex</a>
     </div>
     <div class="creator-credit">created by ξawsjαke</div>
 </div>
 
 <div id="game-container" style="display: none; width: 100%; max-width: 400px;">
     <div class="menu-card" style="padding: 20px;">
+        <div class="game-header">
+            <div id="mode-indicator" style="color: #64748b;">MODE: EASY</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="color: #3b82f6;">Streak: <span id="current-score">0</span></div>
+                <button class="exit-small-btn" onclick="stopGame()">QUIT</button>
+            </div>
+        </div>
+
         <div id="overlay">
             <h2 style="color: #ef4444; font-variant: small-caps;">Scan Failed</h2>
             <img id="correct-img" src="" style="width: 100px; height: 100px; image-rendering: pixelated;">
             <p style="font-size: 18px; font-weight: 800; font-variant: small-caps;">Identity: <span id="correct-name" style="color: #3b82f6;"></span></p>
             <button class="menu-btn" style="background: var(--primary); color: white;" onclick="initStatsGame()">Next Round</button>
-            <button onclick="stopGame()" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 12px; text-decoration: underline; font-variant: small-caps;">Quit</button>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px; font-weight: 800; font-variant: small-caps;">
-            <div id="mode-indicator" style="color: #64748b;">MODE: EASY</div>
-            <div style="color: #3b82f6;">Streak: <span id="current-score">0</span></div>
+            <button onclick="stopGame()" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 12px; text-decoration: underline; font-variant: small-caps; cursor: pointer;">Menu</button>
         </div>
 
         <div id="game-stats"></div>
@@ -154,7 +171,6 @@
         try {
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
             const data = await res.json();
-            if (data.evolves_from_species && !data.evolution_chain) return true;
             const evoRes = await fetch(data.evolution_chain.url);
             const evoData = await evoRes.json();
             let current = evoData.chain;
@@ -186,11 +202,10 @@
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         
-        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-variant:small-caps; font-weight:700;'>Hyper-Loading Data...</div>";
+        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-variant:small-caps; font-weight:700;'>Calibrating...</div>";
         optionsDiv.innerHTML = ""; 
 
         try {
-            // TARGET FINDING (PARALLEL)
             let found = false;
             while(!found) {
                 const batchIds = Array.from({length: 10}, () => Math.floor(Math.random() * 898) + 1);
@@ -205,7 +220,6 @@
 
             renderStats(targetPoke, statsDiv);
             
-            // DECOY FETCHING (PARALLEL)
             const decoys = await fetchDecoysFaster(targetPoke, currentGameMode);
             const choices = [targetPoke, ...decoys].sort(() => Math.random() - 0.5);
             
@@ -265,7 +279,6 @@
         statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
         container.innerHTML = statHtml;
         
-        // Trigger bar animation after render
         setTimeout(() => {
             poke.stats.forEach(s => {
                 const bar = document.getElementById(`bar-${s.stat.name}`);
