@@ -4,151 +4,271 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pokémon Stat Master</title>
+
 <style>
-    :root {
-        --primary: #3b82f6;
-        --success: #10b981;
-        --danger: #ef4444;
-        --card-bg: rgba(255, 255, 255, 0.98);
-        --text-main: #1e293b;
-    }
+:root {
+    --primary: #ef4444;
+    --success: #10b981;
+    --danger: #ef4444;
+    --card-bg: rgba(255, 255, 255, 0.98);
+    --text-main: #1e293b;
+}
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-    body {
-        font-family: 'Inter', -apple-system, sans-serif;
-        background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
-        color: #f8fafc;
-        display: flex; justify-content: center; align-items: center;
-        min-height: 100vh; margin: 0; padding: 10px;
-        overflow-x: hidden;
-    }
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 15px;
+    overflow-x: hidden;
+}
 
-    .menu-card {
-        background: var(--card-bg);
-        width: 100%; max-width: 380px;
-        padding: 25px 15px; border-radius: 28px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-        text-align: center; color: var(--text-main);
-        position: relative; overflow: hidden;
-        user-select: none;
-    }
+.menu-card {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 380px;
+    padding: 30px 20px;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+    text-align: center;
+    color: var(--text-main);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+}
 
-    .menu-title {
-        font-size: 26px; font-weight: 900;
-        margin-bottom: 5px; font-variant: small-caps;
-        background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
+.menu-title {
+    font-size: 24px;
+    font-weight: 900;
+    margin: 5px 0;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #ef4444 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
-    .game-header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 12px; font-size: 10px; font-weight: 800; font-variant: small-caps;
-    }
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 0 5px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
 
-    .exit-small-btn {
-        background: #fee2e2; color: #ef4444; border: none;
-        padding: 6px 12px; border-radius: 10px; cursor: pointer;
-        font-weight: 900; font-size: 10px;
-    }
+.exit-small-btn {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 11px;
+    text-transform: uppercase;
+}
 
-    .stat-display {
-        background: #f8fafc; padding: 12px; border-radius: 20px;
-        margin-bottom: 15px; border: 1px solid #e2e8f0;
-    }
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
 
-    .stat-row {
-        display: flex; align-items: center; margin-bottom: 5px;
-        font-variant: small-caps; font-weight: 800; font-size: 10px;
-    }
+.menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 50px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    border: none;
+    text-transform: uppercase;
+}
 
-    .stat-label { width: 40px; color: #64748b; text-align: left; }
-    .stat-bar-bg { flex-grow: 1; height: 8px; background: #e2e8f0; border-radius: 4px; margin: 0 8px; overflow: hidden; }
-    .stat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease-out; width: 0; }
-    .stat-val { width: 25px; text-align: right; color: #1e293b; }
+.menu-btn:active {
+    transform: scale(0.98);
+}
 
-    .bst-badge {
-        display: inline-block; padding: 3px 10px; background: #3b82f6;
-        color: white; border-radius: 8px; font-size: 11px; margin-top: 8px; font-weight: 800;
-    }
+.mode-easy { background: #10b981; color: white; }
+.mode-med  { background: #f59e0b; color: white; }
+.mode-hard { background: #ef4444; color: white; }
 
-    .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-    
-    .menu-btn {
-        display: flex; align-items: center; justify-content: center;
-        width: 100%; height: 50px; border-radius: 16px;
-        font-size: 14px; font-weight: 800; cursor: pointer; border: none; font-variant: small-caps;
-    }
-    
-    .exit-link-btn { background: white; color: #64748b; border: 2px solid #e2e8f0; text-decoration: none; }
-    
+.exit-link-btn {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    text-decoration: none;
+}
 
-    .mode-easy { background: var(--success); color: white; }
-    .mode-med { background: #f59e0b; color: white; }
-    .mode-hard { background: var(--danger); color: white; }
-    .exit-link-btn { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; text-decoration: none; }
+.stat-display {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 18px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+}
 
-    .option-btn {
-        display: flex; align-items: center; gap: 12px;
-        padding: 6px 12px; border: 2px solid #f1f5f9;
-        border-radius: 16px; background: white; width: 100%;
-        margin-bottom: 6px; cursor: pointer; font-variant: small-caps;
-    }
-    .option-btn:active { background: #f8fafc; transform: scale(0.98); }
-    .option-btn img { width: 45px; height: 45px; image-rendering: pixelated; }
-    .option-btn span { font-size: 14px; font-weight: 700; color: #334155; }
+.stat-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
 
-    #overlay, #success-overlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(255, 255, 255, 0.98); display: none;
-        flex-direction: column; align-items: center; justify-content: center;
-        z-index: 100; padding: 20px; box-sizing: border-box;
-    }
+.stat-label {
+    width: 40px;
+    color: #64748b;
+    text-align: left;
+}
 
-    .creator-credit {
-        margin-top: 20px; font-size: 9px; font-weight: 800;
-        text-transform: lowercase; letter-spacing: 2px; color: #64748b;
-        opacity: 0.6; text-align: center; border-top: 1px solid #e2e8f0;
-        padding-top: 12px; width: 180px; margin: 20px auto 0;
-    }
+.stat-bar-bg {
+    flex-grow: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    margin: 0 8px;
+    overflow: hidden;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    width: 0;
+    transition: width 0.8s ease-out;
+}
+
+.stat-val {
+    width: 25px;
+    text-align: right;
+    color: #1e293b;
+}
+
+.bst-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    margin-top: 8px;
+}
+
+.option-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 18px;
+    background: white;
+    width: 100%;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+.option-btn:active {
+    background: #f1f5f9;
+}
+
+.option-btn img {
+    width: 55px;
+    height: 55px;
+    image-rendering: pixelated;
+}
+
+.option-btn span {
+    font-size: 13px;
+    font-weight: 800;
+    color: #334155;
+    text-transform: capitalize;
+}
+
+#overlay, #success-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.98);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.creator-credit {
+    margin-top: 25px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: lowercase;
+    letter-spacing: 2px;
+    color: #94a3b8;
+    opacity: 0.6;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 12px;
+    width: 180px;
+    margin-left: auto;
+    margin-right: auto;
+}
 </style>
 </head>
+
 <body>
 
 <div id="main-menu" class="menu-card">
-    <div style="font-size: 35px; margin-bottom: 5px;">📊</div>
+    <div style="font-size: 35px;">📊</div>
     <h1 class="menu-title">Stat Master</h1>
+
     <div class="btn-group">
         <button class="menu-btn mode-easy" onclick="startGame('easy')">Easy</button>
         <button class="menu-btn mode-med" onclick="startGame('medium')">Medium</button>
         <button class="menu-btn mode-hard" onclick="startGame('hard')">Hard</button>
-        <a href="https://xoelpr03.github.io/dexv1.1/" class="menu-btn exit-link-btn">RETURN TO POKÉDEX</a>
+        <a href="https://xoelpr03.github.io/dexv1.1/" class="menu-btn exit-link-btn">Return to Pokédex</a>
     </div>
+
     <div class="creator-credit">created by ξawsjαke</div>
 </div>
 
-<div id="game-container" style="display: none; width: 100%; max-width: 400px;">
+<div id="game-container" style="display:none;width:100%;max-width:400px;">
     <div class="menu-card">
         <div class="game-header">
-            <div id="mode-indicator" style="color: #64748b;">MODE: EASY</div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="color: #3b82f6;">Streak: <span id="current-score">0</span></div>
-                <button class="exit-small-btn" onclick="stopGame()">QUIT</button>
+            <div id="mode-indicator">MODE: EASY</div>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <div>Streak: <span id="current-score">0</span></div>
+                <button class="exit-small-btn" onclick="stopGame()">Quit</button>
             </div>
         </div>
 
         <div id="success-overlay">
-            <h2 style="color: var(--success); font-variant: small-caps; margin: 0;">Identity Confirmed</h2>
-            <img id="success-img" src="" style="width: 100px; height: 100px; image-rendering: pixelated;">
-            <p id="success-name" style="font-size: 18px; font-weight: 800; font-variant: small-caps; color: #3b82f6; margin: 5px 0;"></p>
+            <h2 style="color:var(--success);font-weight:900;">Correct</h2>
+            <img id="success-img" width="100" height="100" style="image-rendering:pixelated;">
+            <p id="success-name" style="font-size:18px;font-weight:800;color:#3b82f6;"></p>
         </div>
 
         <div id="overlay">
-            <h2 style="color: var(--danger); font-variant: small-caps; margin: 0;">Scan Failed</h2>
-            <img id="correct-img" src="" style="width: 100px; height: 100px; image-rendering: pixelated;">
-            <p style="font-size: 16px; font-weight: 800; font-variant: small-caps; margin: 5px 0;">Target: <span id="correct-name" style="color: #3b82f6;"></span></p>
-            <button class="menu-btn" style="background: var(--primary); color: white; margin-top: 10px;" onclick="initStatsGame()">Try Again</button>
-            <button onclick="stopGame()" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 11px; text-decoration: underline; font-variant: small-caps; cursor: pointer;">Exit to Menu</button>
+            <h2 style="color:var(--danger);font-weight:900;">Failed</h2>
+            <img id="correct-img" width="100" height="100" style="image-rendering:pixelated;">
+            <p style="font-weight:800;">Target: <span id="correct-name" style="color:#3b82f6;"></span></p>
+            <button class="menu-btn mode-easy" onclick="initStatsGame()">Try Again</button>
+            <button onclick="stopGame()" style="margin-top:15px;background:none;border:none;color:#94a3b8;text-decoration:underline;cursor:pointer;">Back to Menu</button>
         </div>
 
         <div id="game-stats"></div>
@@ -157,153 +277,108 @@
 </div>
 
 <script>
-    let currentScore = 0;
-    let targetPoke = null;
-    let currentGameMode = 'easy';
-    const evoCache = new Map();
+let currentScore = 0;
+let targetPoke = null;
+let currentGameMode = 'easy';
 
-    const STAT_LABELS = { 'hp': 'HP', 'attack': 'ATK', 'defense': 'DEF', 'special-attack': 'SPA', 'special-defense': 'SPD', 'speed': 'SPE' };
+const STAT_LABELS = {
+    hp: 'HP', attack: 'ATK', defense: 'DEF',
+    'special-attack': 'SPA', 'special-defense': 'SPD', speed: 'SPE'
+};
 
-    function getStatColor(val) {
-        if (val <= 50) return '#ef4444';
-        if (val <= 80) return '#f59e0b';
-        if (val <= 110) return '#10b981';
-        return '#3b82f6';
+function getStatColor(val) {
+    if (val <= 50) return '#ef4444';
+    if (val <= 80) return '#f59e0b';
+    if (val <= 110) return '#10b981';
+    return '#3b82f6';
+}
+
+function startGame(mode) {
+    currentGameMode = mode;
+    currentScore = 0;
+    document.getElementById('current-score').innerText = '0';
+    document.getElementById('mode-indicator').innerText = `MODE: ${mode.toUpperCase()}`;
+    initStatsGame();
+}
+
+async function initStatsGame() {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('success-overlay').style.display = 'none';
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+
+    const statsDiv = document.getElementById('game-stats');
+    const optionsDiv = document.getElementById('game-options');
+    statsDiv.innerHTML = "<div style='padding:20px;color:#94a3b8;'>Loading...</div>";
+    optionsDiv.innerHTML = "";
+
+    const id = Math.floor(Math.random() * 800) + 1;
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+    targetPoke = await res.json();
+
+    renderStats(targetPoke, statsDiv);
+
+    const choices = [];
+    while (choices.length < 4) {
+        const cid = Math.floor(Math.random() * 800) + 1;
+        const p = await fetch(`https://pokeapi.co/api/v2/pokemon/${cid}`).then(r => r.json());
+        if (!choices.find(c => c.id === p.id)) choices.push(p);
     }
 
-    async function isFullyEvolved(id) {
-        if (evoCache.has(id)) return evoCache.get(id);
-        try {
-            const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
-            const data = await res.json();
-            const evoRes = await fetch(data.evolution_chain.url);
-            const evoData = await evoRes.json();
-            let current = evoData.chain;
-            while (current && current.species.name !== data.name) {
-                let found = false;
-                for(let branch of current.evolves_to) {
-                    if (JSON.stringify(branch).includes(`"${data.name}"`)) { current = branch; found = true; break; }
-                }
-                if (!found) break;
-            }
-            const result = current.evolves_to.length === 0;
-            evoCache.set(id, result);
-            return result;
-        } catch { return false; }
-    }
+    choices.sort(() => Math.random() - 0.5).forEach(p => {
+        const b = document.createElement('button');
+        b.className = 'option-btn';
+        b.innerHTML = `<img src="${p.sprites.front_default}"><span>${p.name}</span>`;
+        b.onclick = () => handleChoice(p);
+        optionsDiv.appendChild(b);
+    });
+}
 
-    function startGame(mode) {
-        currentGameMode = mode;
-        currentScore = 0;
-        document.getElementById('current-score').innerText = '0';
-        document.getElementById('mode-indicator').innerText = `MODE: ${mode.toUpperCase()}`;
-        initStatsGame();
-    }
-
-    async function initStatsGame() {
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('success-overlay').style.display = 'none';
-        const statsDiv = document.getElementById('game-stats');
-        const optionsDiv = document.getElementById('game-options');
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('game-container').style.display = 'block';
-        
-        statsDiv.innerHTML = "<div style='padding:30px; color:#94a3b8; font-size:12px;'>Syncing Stats...</div>";
-        optionsDiv.innerHTML = ""; 
-
-        try {
-            let found = false;
-            while(!found) {
-                const batchIds = Array.from({length: 5}, () => Math.floor(Math.random() * 800) + 1);
-                const candidates = await Promise.all(batchIds.map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r => r.json())));
-                for (let p of candidates) {
-                    if (currentGameMode === 'hard') {
-                        if (await isFullyEvolved(p.id)) { targetPoke = p; found = true; break; }
-                    } else { targetPoke = p; found = true; break; }
-                }
-            }
-
-            renderStats(targetPoke, statsDiv);
-            const decoys = await fetchDecoysFaster(targetPoke, currentGameMode);
-            const choices = [targetPoke, ...decoys].sort(() => Math.random() - 0.5);
-            
-            optionsDiv.innerHTML = "";
-            choices.forEach(p => {
-                const b = document.createElement('button');
-                b.className = 'option-btn';
-                b.innerHTML = `<img src="${p.sprites.front_default}"><span>${p.name.replace(/-/g,' ')}</span>`;
-                b.onclick = () => handleChoice(p);
-                optionsDiv.appendChild(b);
-            });
-        } catch(e) { statsDiv.innerHTML = "Connection Error"; }
-    }
-
-    function handleChoice(p) {
-        if(p.id === targetPoke.id) {
-            currentScore++;
-            document.getElementById('current-score').innerText = currentScore;
-            showSuccess(p);
-            setTimeout(initStatsGame, 1800);
-        } else {
-            showGameOver();
-        }
-    }
-
-    function showSuccess(p) {
-        document.getElementById('success-name').innerText = p.name.replace(/-/g, ' ');
+function handleChoice(p) {
+    if (p.id === targetPoke.id) {
+        currentScore++;
+        document.getElementById('current-score').innerText = currentScore;
+        document.getElementById('success-name').innerText = p.name;
         document.getElementById('success-img').src = p.sprites.front_default;
         document.getElementById('success-overlay').style.display = 'flex';
-    }
-
-    async function fetchDecoysFaster(target, mode) {
-        const tBst = target.stats.reduce((a, b) => a + b.base_stat, 0);
-        const decoys = [];
-        while (decoys.length < 3) {
-            const ids = Array.from({length: 6}, () => Math.floor(Math.random() * 800) + 1);
-            const results = await Promise.all(ids.map(async id => {
-                if (id === target.id) return null;
-                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-                const p = await res.json();
-                const pBst = p.stats.reduce((a, b) => a + b.base_stat, 0);
-                if (mode === 'easy') return p;
-                if (mode === 'medium' && Math.abs(pBst - tBst) <= 100) return p;
-                if (mode === 'hard' && Math.abs(pBst - tBst) <= 50) return p;
-                return null;
-            }));
-            results.forEach(p => { if(p && decoys.length < 3 && !decoys.find(d => d.id === p.id)) decoys.push(p); });
-        }
-        return decoys;
-    }
-
-    function renderStats(poke, container) {
-        let bst = 0;
-        let statHtml = '<div class="stat-display">';
-        poke.stats.forEach(s => {
-            const val = s.base_stat;
-            bst += val;
-            statHtml += `<div class="stat-row"><span class="stat-label">${STAT_LABELS[s.stat.name]}</span><div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-${s.stat.name}" style="background:${getStatColor(val)};"></div></div><span class="stat-val">${val}</span></div>`;
-        });
-        statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
-        container.innerHTML = statHtml;
-        setTimeout(() => {
-            poke.stats.forEach(s => {
-                const bar = document.getElementById(`bar-${s.stat.name}`);
-                if(bar) bar.style.width = `${Math.min(100, (s.base_stat/180)*100)}%`;
-            });
-        }, 50);
-    }
-
-    function showGameOver() {
-        document.getElementById('correct-name').innerText = targetPoke.name.replace(/-/g, ' ');
+        setTimeout(initStatsGame, 1800);
+    } else {
+        document.getElementById('correct-name').innerText = targetPoke.name;
         document.getElementById('correct-img').src = targetPoke.sprites.front_default;
         document.getElementById('overlay').style.display = 'flex';
     }
+}
 
-    function stopGame() { 
-        document.getElementById('game-container').style.display = 'none'; 
-        document.getElementById('main-menu').style.display = 'block'; 
-    }
+function renderStats(poke, container) {
+    let bst = 0;
+    let html = '<div class="stat-display">';
+    poke.stats.forEach(s => {
+        bst += s.base_stat;
+        html += `
+        <div class="stat-row">
+            <span class="stat-label">${STAT_LABELS[s.stat.name]}</span>
+            <div class="stat-bar-bg">
+                <div class="stat-bar-fill" id="bar-${s.stat.name}" style="background:${getStatColor(s.base_stat)};"></div>
+            </div>
+            <span class="stat-val">${s.base_stat}</span>
+        </div>`;
+    });
+    html += `<div class="bst-badge">BST: ${bst}</div></div>`;
+    container.innerHTML = html;
+
+    setTimeout(() => {
+        poke.stats.forEach(s => {
+            const bar = document.getElementById(`bar-${s.stat.name}`);
+            if (bar) bar.style.width = `${Math.min(100, s.base_stat / 180 * 100)}%`;
+        });
+    }, 50);
+}
+
+function stopGame() {
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('main-menu').style.display = 'block';
+}
 </script>
+
 </body>
 </html>
-
