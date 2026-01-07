@@ -36,10 +36,10 @@
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    /* --- DYNAMIC STAT DISPLAY --- */
     .stat-display {
         background: #f8fafc; padding: 15px; border-radius: 20px;
         margin-bottom: 20px; border: 1px solid #e2e8f0;
+        min-height: 180px;
     }
 
     .stat-row {
@@ -49,7 +49,7 @@
 
     .stat-label { width: 45px; color: #64748b; text-align: left; }
     .stat-bar-bg { flex-grow: 1; height: 10px; background: #e2e8f0; border-radius: 5px; margin: 0 10px; overflow: hidden; }
-    .stat-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+    .stat-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; width: 0; }
     .stat-val { width: 30px; text-align: right; color: #1e293b; }
 
     .bst-badge {
@@ -57,7 +57,6 @@
         color: white; border-radius: 10px; font-size: 12px; margin-top: 10px; font-weight: 800;
     }
 
-    /* --- BUTTONS --- */
     .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
     .menu-btn {
         display: flex; align-items: center; justify-content: center;
@@ -74,7 +73,10 @@
         padding: 8px 15px; border: 2px solid #f1f5f9;
         border-radius: 18px; background: white; width: 100%;
         margin-bottom: 8px; cursor: pointer; font-variant: small-caps;
+        animation: fadeIn 0.3s ease forwards;
     }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     .option-btn img { width: 50px; height: 50px; image-rendering: pixelated; }
     .option-btn span { font-size: 15px; font-weight: 700; color: #334155; }
@@ -87,21 +89,13 @@
     }
 
     .creator-credit {
-        margin-top: 30px;
-        font-size: 10px;
-        font-weight: 800;
-        text-transform: lowercase;
-        letter-spacing: 2px;
-        color: var(--silver-dark);
-        opacity: 0.6;
-        text-align: center;
-        border-top: 1px solid var(--silver-light);
-        padding-top: 15px;
-        width: 200px;
-        margin-left: auto;
-        margin-right: auto;
+        margin-top: 30px; font-size: 10px; font-weight: 800;
+        text-transform: lowercase; letter-spacing: 2px; color: #64748b;
+        opacity: 0.6; text-align: center; border-top: 1px solid #e2e8f0;
+        padding-top: 15px; width: 200px; margin: 30px auto 0;
     }
 
+    #loader-text { color: #94a3b8; font-variant: small-caps; font-weight: 700; padding: 40px; }
 </style>
 </head>
 <body>
@@ -110,13 +104,12 @@
     <div style="font-size: 50px; margin-bottom: 10px;">📊</div>
     <h1 class="menu-title">Stat Master</h1>
     <p style="font-size: 14px; color: #64748b; font-variant: small-caps;">Identify the subject by data.</p>
-    
     <div class="btn-group">
         <button id="start-game-btn" class="menu-btn" onclick="initStatsGame()">Begin Scan</button>
         <a href="https://xoelpr03.github.io/dexv1.1/" class="menu-btn exit-link-btn">Return to Dex</a>
     </div>
     <div style="margin-top: 30px; font-size: 12px; color: #94a3b8; font-variant: small-caps;">
-        Record Streak: <span id="menu-best-score" style="color: #3b82f6;">0</span>
+        Record Streak: <span id="menu-best-score">0</span>
     </div>
     <div class="creator-credit">created by ξawsjαke</div>
 </div>
@@ -142,7 +135,7 @@
 </div>
 
 <script>
-   let currentScore = 0;
+    let currentScore = 0;
     let bestScore = localStorage.getItem('pokeStatBestFinal') || 0;
     let targetPoke = null;
 
@@ -166,11 +159,9 @@
             const evoData = await evoRes.json();
             
             let current = evoData.chain;
-            // Traverse to find the current species in the chain
             while (current && current.species.name !== data.name) {
                 let found = false;
                 for(let branch of current.evolves_to) {
-                    // Check if current species is in this branch's sub-tree
                     if (JSON.stringify(branch).includes(`"${data.name}"`)) {
                         current = branch;
                         found = true;
@@ -179,7 +170,6 @@
                 }
                 if (!found) break;
             }
-            // If it has no "evolves_to" array elements, it is the final form
             return current.evolves_to.length === 0;
         } catch { return false; }
     }
@@ -190,67 +180,113 @@
         const optionsDiv = document.getElementById('game-options');
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
-        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-weight:700; font-variant: small-caps;'>Searching Final Forms...</div>";
+        
+        statsDiv.innerHTML = "<div id='loader-text'>Initializing Scanner...</div>";
         optionsDiv.innerHTML = ""; 
 
         try {
-            let targetFound = false;
-            while(!targetFound) {
-                const rId = Math.floor(Math.random() * 600) + 1; // Faster search in early gens
-                if (await isFullyEvolved(rId)) {
-                    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
-                    targetPoke = await res.json();
-                    targetFound = true;
+            // 1. PHASE ONE: FIND TARGET FAST
+            let found = false;
+            while(!found) {
+                const rId = Math.floor(Math.random() * 898) + 1;
+                // Quick check: Usually fully evolved have higher stats, speeds up searching
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
+                const p = await res.json();
+                const bstCheck = p.stats.reduce((a, s) => a + s.base_stat, 0);
+                
+                if (bstCheck > 300 && await isFullyEvolved(rId)) {
+                    targetPoke = p;
+                    found = true;
                 }
             }
 
-            let bst = 0;
-            let statHtml = '<div class="stat-display">';
-            targetPoke.stats.forEach(s => {
-                const val = s.base_stat;
-                const color = getStatColor(val);
-                bst += val;
-                statHtml += `<div class="stat-row"><span class="stat-label">${STAT_LABELS[s.stat.name]}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${Math.min(100, (val/160)*100)}%; background:${color};"></div></div><span class="stat-val">${val}</span></div>`;
-            });
-            statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
-            statsDiv.innerHTML = statHtml;
+            // 2. PHASE TWO: RENDER STATS IMMEDIATELY
+            renderStats(targetPoke, statsDiv);
+            optionsDiv.innerHTML = "<div style='color:#94a3b8; font-size:11px; font-weight:700; font-variant:small-caps;'>Fetching Decoys...</div>";
 
-            let choices = [targetPoke];
-            while(choices.length < 4) {
-                const rId = Math.floor(Math.random() * 898) + 1;
-                if(choices.some(c => c.id === rId)) continue;
-                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
-                const p = await res.json();
-                const pBst = p.stats.reduce((acc, s) => acc + s.base_stat, 0);
-                // For impostors, we check if they are within BST range and fully evolved
-                if(Math.abs(pBst - bst) <= 40 && await isFullyEvolved(rId)) { choices.push(p); }
-            }
-
-            choices.sort(() => Math.random() - 0.5).forEach(p => {
+            // 3. PHASE THREE: FETCH DECOYS IN BACKGROUND
+            const decoys = await fetchDecoys(targetPoke);
+            const choices = [targetPoke, ...decoys].sort(() => Math.random() - 0.5);
+            
+            // 4. PHASE FOUR: RENDER CHOICES
+            optionsDiv.innerHTML = "";
+            choices.forEach(p => {
                 const b = document.createElement('button');
                 b.className = 'option-btn';
                 b.innerHTML = `<img src="${p.sprites.front_default}"><span>${p.name.replace(/-/g,' ')}</span>`;
-                b.onclick = () => {
-                    if(p.id === targetPoke.id) {
-                        currentScore++;
-                        if(currentScore > bestScore) { bestScore = currentScore; localStorage.setItem('pokeStatBestFinal', bestScore); }
-                        document.getElementById('current-score').innerText = currentScore;
-                        initStatsGame();
-                    } else { showGameOver(); }
-                };
+                b.onclick = () => handleChoice(p, targetPoke);
                 optionsDiv.appendChild(b);
             });
-        } catch(e) { statsDiv.innerHTML = "Error."; }
+
+        } catch(e) { statsDiv.innerHTML = "Sync Error."; console.error(e);}
+    }
+
+    function renderStats(poke, container) {
+        let bst = 0;
+        let statHtml = '<div class="stat-display">';
+        poke.stats.forEach(s => {
+            const val = s.base_stat;
+            const color = getStatColor(val);
+            bst += val;
+            statHtml += `
+                <div class="stat-row">
+                    <span class="stat-label">${STAT_LABELS[s.stat.name]}</span>
+                    <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${Math.min(100, (val/160)*100)}%; background:${color};"></div></div>
+                    <span class="stat-val">${val}</span>
+                </div>`;
+        });
+        statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
+        container.innerHTML = statHtml;
+    }
+
+    async function fetchDecoys(target) {
+        const targetBst = target.stats.reduce((a, s) => a + s.base_stat, 0);
+        const decoys = [];
+        
+        // Parallel fetching to be much faster
+        while (decoys.length < 3) {
+            const ids = Array.from({length: 5}, () => Math.floor(Math.random() * 898) + 1);
+            const results = await Promise.all(ids.map(async id => {
+                if (id === target.id) return null;
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+                const p = await res.json();
+                const pBst = p.stats.reduce((a, s) => a + s.base_stat, 0);
+                if (Math.abs(pBst - targetBst) <= 50 && await isFullyEvolved(id)) return p;
+                return null;
+            }));
+            
+            results.forEach(p => { if(p && decoys.length < 3 && !decoys.find(d => d.id === p.id)) decoys.push(p); });
+        }
+        return decoys;
+    }
+
+    function handleChoice(chosen, target) {
+        if(chosen.id === target.id) {
+            currentScore++;
+            if(currentScore > bestScore) { 
+                bestScore = currentScore; 
+                localStorage.setItem('pokeStatBestFinal', bestScore); 
+            }
+            document.getElementById('current-score').innerText = currentScore;
+            initStatsGame();
+        } else {
+            showGameOver();
+        }
     }
 
     function showGameOver() {
         document.getElementById('correct-name').innerText = targetPoke.name.replace(/-/g, ' ');
         document.getElementById('correct-img').src = targetPoke.sprites.front_default;
         document.getElementById('overlay').style.display = 'flex';
-        currentScore = 0; document.getElementById('current-score').innerText = 0;
+        currentScore = 0; 
+        document.getElementById('current-score').innerText = 0;
     }
 
-    function stopGame() { document.getElementById('game-container').style.display = 'none'; document.getElementById('main-menu').style.display = 'block'; }
+    function stopGame() { 
+        document.getElementById('game-container').style.display = 'none'; 
+        document.getElementById('main-menu').style.display = 'block'; 
+    }
+
     document.getElementById('menu-best-score').innerText = bestScore;
     document.getElementById('best-score').innerText = bestScore;
 </script>
