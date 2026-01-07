@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pokémon Stat Master</title>
+<style>
+    :root {
+        --primary: #3b82f6;
+        --card-bg: rgba(255, 255, 255, 0.98);
+        --text-main: #1e293b;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+        color: #f8fafc;
+        display: flex; justify-content: center; align-items: center;
+        min-height: 100vh; margin: 0; padding: 15px;
+        overscroll-behavior-y: contain;
+    }
+
+    .menu-card {
+        background: var(--card-bg);
+        width: 100%; max-width: 400px;
+        padding: 30px 20px; border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        text-align: center; color: var(--text-main);
+        position: relative;
+    }
+
+    .menu-title {
+        font-size: clamp(24px, 8vw, 32px); font-weight: 900;
+        margin-bottom: 8px; font-variant: small-caps;
+        background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* --- DYNAMIC STAT DISPLAY --- */
+    .stat-display {
+        background: #f8fafc; padding: 15px; border-radius: 20px;
+        margin-bottom: 20px; border: 1px solid #e2e8f0;
+    }
+
+    .stat-row {
+        display: flex; align-items: center; margin-bottom: 6px;
+        font-variant: small-caps; font-weight: 800; font-size: 11px;
+    }
+
+    .stat-label { width: 45px; color: #64748b; text-align: left; }
+    .stat-bar-bg { flex-grow: 1; height: 10px; background: #e2e8f0; border-radius: 5px; margin: 0 10px; overflow: hidden; }
+    .stat-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+    .stat-val { width: 30px; text-align: right; color: #1e293b; }
+
+    .bst-badge {
+        display: inline-block; padding: 4px 12px; background: #3b82f6;
+        color: white; border-radius: 10px; font-size: 12px; margin-top: 10px; font-weight: 800;
+    }
+
+    /* --- BUTTONS --- */
+    .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    .menu-btn {
+        display: flex; align-items: center; justify-content: center;
+        width: 100%; height: 60px; border-radius: 20px;
+        font-size: 16px; font-weight: 800; text-decoration: none;
+        cursor: pointer; border: none; font-variant: small-caps;
+    }
+
+    #start-game-btn { background: var(--primary); color: white; }
+    .exit-link-btn { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; }
+
+    .option-btn {
+        display: flex; align-items: center; gap: 15px;
+        padding: 8px 15px; border: 2px solid #f1f5f9;
+        border-radius: 18px; background: white; width: 100%;
+        margin-bottom: 8px; cursor: pointer; font-variant: small-caps;
+    }
+
+    .option-btn img { width: 50px; height: 50px; image-rendering: pixelated; }
+    .option-btn span { font-size: 15px; font-weight: 700; color: #334155; }
+
+    #overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255, 255, 255, 0.98); display: none;
+        flex-direction: column; align-items: center; justify-content: center;
+        z-index: 100; padding: 20px; border-radius: 32px; box-sizing: border-box;
+    }
+</style>
+</head>
+<body>
+
+<div id="main-menu" class="menu-card">
+    <div style="font-size: 50px; margin-bottom: 10px;">📊</div>
+    <h1 class="menu-title">Stat Master</h1>
+    <p style="font-size: 14px; color: #64748b; font-variant: small-caps;">Identify the subject by data.</p>
+    
+    <div class="btn-group">
+        <button id="start-game-btn" class="menu-btn" onclick="initStatsGame()">Begin Scan</button>
+        <a href="https://xoelpr03.github.io/dexv1.1/" class="menu-btn exit-link-btn">Return to Dex</a>
+    </div>
+    <div style="margin-top: 30px; font-size: 12px; color: #94a3b8; font-variant: small-caps;">
+        Record Streak: <span id="menu-best-score" style="color: #3b82f6;">0</span>
+    </div>
+</div>
+
+<div id="game-container" style="display: none; width: 100%; max-width: 400px;">
+    <div class="menu-card" style="padding: 20px;">
+        <div id="overlay">
+            <h2 style="color: #ef4444; font-variant: small-caps;">Scan Failed</h2>
+            <img id="correct-img" src="" style="width: 100px; height: 100px; image-rendering: pixelated;">
+            <p style="font-size: 18px; font-weight: 800; font-variant: small-caps;">Identity: <span id="correct-name" style="color: #3b82f6;"></span></p>
+            <button class="menu-btn" style="background: var(--primary); color: white;" onclick="initStatsGame()">Retry</button>
+            <button onclick="stopGame()" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 12px; text-decoration: underline; font-variant: small-caps;">Back</button>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px; font-weight: 800; font-variant: small-caps;">
+            <div style="color: #3b82f6;">Streak: <span id="current-score">0</span></div>
+            <div style="color: #10b981;">Best: <span id="best-score">0</span></div>
+        </div>
+
+        <div id="game-stats"></div>
+        <div id="game-options"></div>
+    </div>
+    <div class="creator-credit">created by ξawsjαke</div>
+</div>
+
+<script>
+    let currentScore = 0;
+    let bestScore = localStorage.getItem('pokeStatBest') || 0;
+    let targetPoke = null;
+
+    const STAT_LABELS = {
+        'hp': 'HP', 'attack': 'ATK', 'defense': 'DEF', 
+        'special-attack': 'SPA', 'special-defense': 'SPD', 'speed': 'SPE'
+    };
+
+    function getStatColor(val) {
+        if (val <= 40) return '#ef4444'; // Red
+        if (val <= 60) return '#f97316'; // Orange
+        if (val <= 80) return '#eab308'; // Yellow
+        if (val <= 100) return '#a3e635'; // Light Green
+        if (val <= 130) return '#22c55e'; // Green
+        if (val <= 150) return '#3b82f6'; // Blue
+        return '#a855f7'; // Purple (151+)
+    }
+
+    function updateScoreUI() {
+        document.getElementById('best-score').innerText = bestScore;
+        document.getElementById('menu-best-score').innerText = bestScore;
+        document.getElementById('current-score').innerText = currentScore;
+    }
+
+    async function initStatsGame() {
+        document.getElementById('overlay').style.display = 'none';
+        const statsDiv = document.getElementById('game-stats');
+        const optionsDiv = document.getElementById('game-options');
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        
+        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-weight:700; font-variant: small-caps;'>Analyzing Stats...</div>";
+        optionsDiv.innerHTML = ""; 
+
+        try {
+            const targetId = Math.floor(Math.random() * 898) + 1;
+            const targetRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${targetId}`);
+            targetPoke = await targetRes.json();
+
+            let bst = 0;
+            let statHtml = '<div class="stat-display">';
+            targetPoke.stats.forEach(s => {
+                const val = s.base_stat;
+                const label = STAT_LABELS[s.stat.name];
+                const color = getStatColor(val);
+                bst += val;
+                const percent = Math.min(100, (val / 160) * 100); 
+                
+                statHtml += `
+                    <div class="stat-row">
+                        <span class="stat-label">${label}</span>
+                        <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${percent}%; background:${color};"></div></div>
+                        <span class="stat-val">${val}</span>
+                    </div>
+                `;
+            });
+            statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
+            statsDiv.innerHTML = statHtml;
+
+            let choices = [targetPoke];
+            let attempts = 0;
+            while(choices.length < 4 && attempts < 60) {
+                attempts++;
+                const rId = Math.floor(Math.random() * 898) + 1;
+                if(choices.some(c => c.id === rId)) continue;
+                
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
+                const p = await res.json();
+                const pBst = p.stats.reduce((acc, s) => acc + s.base_stat, 0);
+                
+                if(Math.abs(pBst - bst) <= 25) { choices.push(p); }
+            }
+
+            choices.sort(() => Math.random() - 0.5).forEach(p => {
+                const b = document.createElement('button');
+                b.className = 'option-btn';
+                b.innerHTML = `<img src="${p.sprites.front_default}"><span>${p.name.replace(/-/g,' ')}</span>`;
+                b.onclick = () => {
+                    if(p.id === targetPoke.id) {
+                        b.style.borderColor = "#10b981"; b.style.background = "#f0fdf4";
+                        currentScore++;
+                        if(currentScore > bestScore) { 
+                            bestScore = currentScore; 
+                            localStorage.setItem('pokeStatBest', bestScore); 
+                        }
+                        updateScoreUI(); setTimeout(initStatsGame, 600);
+                    } else { showGameOver(); }
+                };
+                optionsDiv.appendChild(b);
+            });
+
+        } catch(e) { statsDiv.innerHTML = "Connection Error."; }
+    }
+
+    function showGameOver() {
+        document.getElementById('correct-name').innerText = targetPoke.name.replace(/-/g, ' ');
+        document.getElementById('correct-img').src = targetPoke.sprites.front_default;
+        document.getElementById('overlay').style.display = 'flex';
+        currentScore = 0; updateScoreUI();
+    }
+
+    function stopGame() {
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'block';
+    }
+    updateScoreUI();
+</script>
+</body>
+</html>
