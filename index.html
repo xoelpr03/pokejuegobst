@@ -312,19 +312,27 @@ async function initStatsGame() {
     statsDiv.innerHTML = "<div style='padding:20px;color:#94a3b8;'>Loading...</div>";
     optionsDiv.innerHTML = "";
 
+    // 1. Get the target Pokémon (the stats the user sees)
     const id = Math.floor(Math.random() * 800) + 1;
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
     targetPoke = await res.json();
 
     renderStats(targetPoke, statsDiv);
 
-    const choices = [];
+    // 2. Start the choices list with the CORRECT Pokémon
+    const choices = [targetPoke]; 
+
+    // 3. Add 3 more WRONG Pokémon to the list
     while (choices.length < 4) {
         const cid = Math.floor(Math.random() * 800) + 1;
+        // Don't add the same Pokémon twice
+        if (cid === targetPoke.id) continue; 
+        
         const p = await fetch(`https://pokeapi.co/api/v2/pokemon/${cid}`).then(r => r.json());
         if (!choices.find(c => c.id === p.id)) choices.push(p);
     }
 
+    // 4. Shuffle the choices so the correct one isn't always first
     choices.sort(() => Math.random() - 0.5).forEach(p => {
         const b = document.createElement('button');
         b.className = 'option-btn';
@@ -382,3 +390,4 @@ function stopGame() {
 
 </body>
 </html>
+
