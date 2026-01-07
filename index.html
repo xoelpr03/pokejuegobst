@@ -13,107 +13,107 @@
         --text-main: #1e293b;
     }
 
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
     body {
         font-family: 'Inter', -apple-system, sans-serif;
         background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
         color: #f8fafc;
         display: flex; justify-content: center; align-items: center;
-        min-height: 100vh; margin: 0; padding: 15px;
-        overscroll-behavior-y: contain;
+        min-height: 100vh; margin: 0; padding: 10px;
+        overflow-x: hidden;
     }
 
     .menu-card {
         background: var(--card-bg);
-        width: 100%; max-width: 400px;
-        padding: 30px 20px; border-radius: 32px;
+        width: 100%; max-width: 380px;
+        padding: 25px 15px; border-radius: 28px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
         text-align: center; color: var(--text-main);
         position: relative; overflow: hidden;
+        user-select: none;
     }
 
     .menu-title {
-        font-size: clamp(24px, 8vw, 32px); font-weight: 900;
-        margin-bottom: 8px; font-variant: small-caps;
+        font-size: 26px; font-weight: 900;
+        margin-bottom: 5px; font-variant: small-caps;
         background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
     .game-header {
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 15px; font-size: 11px; font-weight: 800; font-variant: small-caps;
+        margin-bottom: 12px; font-size: 10px; font-weight: 800; font-variant: small-caps;
     }
 
     .exit-small-btn {
         background: #fee2e2; color: #ef4444; border: none;
-        padding: 4px 10px; border-radius: 8px; cursor: pointer;
+        padding: 6px 12px; border-radius: 10px; cursor: pointer;
         font-weight: 900; font-size: 10px;
     }
 
     .stat-display {
-        background: #f8fafc; padding: 15px; border-radius: 20px;
-        margin-bottom: 20px; border: 1px solid #e2e8f0; min-height: 180px;
+        background: #f8fafc; padding: 12px; border-radius: 20px;
+        margin-bottom: 15px; border: 1px solid #e2e8f0;
     }
 
     .stat-row {
-        display: flex; align-items: center; margin-bottom: 6px;
-        font-variant: small-caps; font-weight: 800; font-size: 11px;
+        display: flex; align-items: center; margin-bottom: 5px;
+        font-variant: small-caps; font-weight: 800; font-size: 10px;
     }
 
-    .stat-label { width: 45px; color: #64748b; text-align: left; }
-    .stat-bar-bg { flex-grow: 1; height: 10px; background: #e2e8f0; border-radius: 5px; margin: 0 10px; overflow: hidden; }
-    .stat-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 0; }
-    .stat-val { width: 30px; text-align: right; color: #1e293b; }
+    .stat-label { width: 40px; color: #64748b; text-align: left; }
+    .stat-bar-bg { flex-grow: 1; height: 8px; background: #e2e8f0; border-radius: 4px; margin: 0 8px; overflow: hidden; }
+    .stat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease-out; width: 0; }
+    .stat-val { width: 25px; text-align: right; color: #1e293b; }
 
     .bst-badge {
-        display: inline-block; padding: 4px 12px; background: #3b82f6;
-        color: white; border-radius: 10px; font-size: 12px; margin-top: 10px; font-weight: 800;
+        display: inline-block; padding: 3px 10px; background: #3b82f6;
+        color: white; border-radius: 8px; font-size: 11px; margin-top: 8px; font-weight: 800;
     }
 
-    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+    
     .menu-btn {
         display: flex; align-items: center; justify-content: center;
-        width: 100%; height: 54px; border-radius: 18px;
-        font-size: 14px; font-weight: 800; text-decoration: none;
-        cursor: pointer; border: none; font-variant: small-caps;
+        width: 100%; height: 50px; border-radius: 16px;
+        font-size: 14px; font-weight: 800; cursor: pointer; border: none; font-variant: small-caps;
     }
 
     .mode-easy { background: var(--success); color: white; }
     .mode-med { background: #f59e0b; color: white; }
     .mode-hard { background: var(--danger); color: white; }
-    .exit-link-btn { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; margin-top: 10px;}
+    .exit-link-btn { background: #f1f5f9; color: #475569; border: 2px solid #e2e8f0; text-decoration: none; }
 
     .option-btn {
-        display: flex; align-items: center; gap: 15px;
-        padding: 8px 15px; border: 2px solid #f1f5f9;
-        border-radius: 18px; background: white; width: 100%;
-        margin-bottom: 8px; cursor: pointer; font-variant: small-caps;
-        animation: fadeIn 0.3s ease forwards;
+        display: flex; align-items: center; gap: 12px;
+        padding: 6px 12px; border: 2px solid #f1f5f9;
+        border-radius: 16px; background: white; width: 100%;
+        margin-bottom: 6px; cursor: pointer; font-variant: small-caps;
     }
+    .option-btn:active { background: #f8fafc; transform: scale(0.98); }
+    .option-btn img { width: 45px; height: 45px; image-rendering: pixelated; }
+    .option-btn span { font-size: 14px; font-weight: 700; color: #334155; }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    .option-btn img { width: 50px; height: 50px; image-rendering: pixelated; }
-    .option-btn span { font-size: 15px; font-weight: 700; color: #334155; }
-
-    /* --- OVERLAYS --- */
     #overlay, #success-overlay {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(255, 255, 255, 0.98); display: none;
         flex-direction: column; align-items: center; justify-content: center;
-        z-index: 100; padding: 20px; border-radius: 32px; box-sizing: border-box;
+        z-index: 100; padding: 20px; box-sizing: border-box;
     }
 
     .creator-credit {
-        margin-top: 20px; font-size: 10px; font-weight: 800;
+        margin-top: 20px; font-size: 9px; font-weight: 800;
         text-transform: lowercase; letter-spacing: 2px; color: #64748b;
         opacity: 0.6; text-align: center; border-top: 1px solid #e2e8f0;
-        padding-top: 15px; width: 200px; margin: 20px auto 0;
+        padding-top: 12px; width: 180px; margin: 20px auto 0;
     }
 </style>
 </head>
 <body>
 
 <div id="main-menu" class="menu-card">
-    <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
+    <div style="font-size: 35px; margin-bottom: 5px;">📊</div>
     <h1 class="menu-title">Stat Master</h1>
     <div class="btn-group">
         <button class="menu-btn mode-easy" onclick="startGame('easy')">Easy</button>
@@ -125,28 +125,27 @@
 </div>
 
 <div id="game-container" style="display: none; width: 100%; max-width: 400px;">
-    <div class="menu-card" style="padding: 20px;">
+    <div class="menu-card">
         <div class="game-header">
             <div id="mode-indicator" style="color: #64748b;">MODE: EASY</div>
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <div style="color: #3b82f6;">Streak: <span id="current-score">0</span></div>
                 <button class="exit-small-btn" onclick="stopGame()">QUIT</button>
             </div>
         </div>
 
         <div id="success-overlay">
-            <h2 style="color: var(--success); font-variant: small-caps;">Identity Confirmed</h2>
+            <h2 style="color: var(--success); font-variant: small-caps; margin: 0;">Identity Confirmed</h2>
             <img id="success-img" src="" style="width: 100px; height: 100px; image-rendering: pixelated;">
-            <p id="success-name" style="font-size: 18px; font-weight: 800; font-variant: small-caps; color: #3b82f6;"></p>
-            <div style="color: #94a3b8; font-size: 12px; font-variant: small-caps; margin-top: 10px;">Loading next scan...</div>
+            <p id="success-name" style="font-size: 18px; font-weight: 800; font-variant: small-caps; color: #3b82f6; margin: 5px 0;"></p>
         </div>
 
         <div id="overlay">
-            <h2 style="color: var(--danger); font-variant: small-caps;">Scan Failed</h2>
+            <h2 style="color: var(--danger); font-variant: small-caps; margin: 0;">Scan Failed</h2>
             <img id="correct-img" src="" style="width: 100px; height: 100px; image-rendering: pixelated;">
-            <p style="font-size: 18px; font-weight: 800; font-variant: small-caps;">Identity: <span id="correct-name" style="color: #3b82f6;"></span></p>
-            <button class="menu-btn" style="background: var(--primary); color: white;" onclick="initStatsGame()">Try Again</button>
-            <button onclick="stopGame()" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 12px; text-decoration: underline; font-variant: small-caps; cursor: pointer;">Exit to Menu</button>
+            <p style="font-size: 16px; font-weight: 800; font-variant: small-caps; margin: 5px 0;">Target: <span id="correct-name" style="color: #3b82f6;"></span></p>
+            <button class="menu-btn" style="background: var(--primary); color: white; margin-top: 10px;" onclick="initStatsGame()">Try Again</button>
+            <button onclick="stopGame()" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 11px; text-decoration: underline; font-variant: small-caps; cursor: pointer;">Exit to Menu</button>
         </div>
 
         <div id="game-stats"></div>
@@ -163,13 +162,10 @@
     const STAT_LABELS = { 'hp': 'HP', 'attack': 'ATK', 'defense': 'DEF', 'special-attack': 'SPA', 'special-defense': 'SPD', 'speed': 'SPE' };
 
     function getStatColor(val) {
-        if (val <= 40) return '#ef4444';
-        if (val <= 60) return '#f97316';
-        if (val <= 80) return '#eab308';
-        if (val <= 100) return '#a3e635';
-        if (val <= 130) return '#22c55e';
-        if (val <= 150) return '#3b82f6';
-        return '#a855f7';
+        if (val <= 50) return '#ef4444';
+        if (val <= 80) return '#f59e0b';
+        if (val <= 110) return '#10b981';
+        return '#3b82f6';
     }
 
     async function isFullyEvolved(id) {
@@ -209,13 +205,13 @@
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         
-        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-variant:small-caps; font-weight:700;'>Calibrating...</div>";
+        statsDiv.innerHTML = "<div style='padding:30px; color:#94a3b8; font-size:12px;'>Syncing Stats...</div>";
         optionsDiv.innerHTML = ""; 
 
         try {
             let found = false;
             while(!found) {
-                const batchIds = Array.from({length: 8}, () => Math.floor(Math.random() * 898) + 1);
+                const batchIds = Array.from({length: 5}, () => Math.floor(Math.random() * 800) + 1);
                 const candidates = await Promise.all(batchIds.map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r => r.json())));
                 for (let p of candidates) {
                     if (currentGameMode === 'hard') {
@@ -236,7 +232,7 @@
                 b.onclick = () => handleChoice(p);
                 optionsDiv.appendChild(b);
             });
-        } catch(e) { statsDiv.innerHTML = "Sync Error."; }
+        } catch(e) { statsDiv.innerHTML = "Connection Error"; }
     }
 
     function handleChoice(p) {
@@ -244,9 +240,7 @@
             currentScore++;
             document.getElementById('current-score').innerText = currentScore;
             showSuccess(p);
-            setTimeout(() => {
-                initStatsGame();
-            }, 2000); // 2 second delay as requested
+            setTimeout(initStatsGame, 1800);
         } else {
             showGameOver();
         }
@@ -259,23 +253,18 @@
     }
 
     async function fetchDecoysFaster(target, mode) {
-        const tStats = target.stats.map(s => s.base_stat);
-        const tBst = tStats.reduce((a, b) => a + b, 0);
+        const tBst = target.stats.reduce((a, b) => a + b.base_stat, 0);
         const decoys = [];
         while (decoys.length < 3) {
-            const ids = Array.from({length: 10}, () => Math.floor(Math.random() * 898) + 1);
+            const ids = Array.from({length: 6}, () => Math.floor(Math.random() * 800) + 1);
             const results = await Promise.all(ids.map(async id => {
                 if (id === target.id) return null;
                 const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
                 const p = await res.json();
                 const pBst = p.stats.reduce((a, b) => a + b.base_stat, 0);
                 if (mode === 'easy') return p;
-                if (mode === 'medium' && Math.abs(pBst - tBst) <= 80) return p;
-                if (mode === 'hard') {
-                    let totalDiff = 0;
-                    for(let i=0; i<6; i++) totalDiff += Math.abs(tStats[i] - p.stats[i].base_stat);
-                    if (totalDiff <= 130 && await isFullyEvolved(id)) return p;
-                }
+                if (mode === 'medium' && Math.abs(pBst - tBst) <= 100) return p;
+                if (mode === 'hard' && Math.abs(pBst - tBst) <= 50) return p;
                 return null;
             }));
             results.forEach(p => { if(p && decoys.length < 3 && !decoys.find(d => d.id === p.id)) decoys.push(p); });
@@ -296,7 +285,7 @@
         setTimeout(() => {
             poke.stats.forEach(s => {
                 const bar = document.getElementById(`bar-${s.stat.name}`);
-                if(bar) bar.style.width = `${Math.min(100, (s.base_stat/160)*100)}%`;
+                if(bar) bar.style.width = `${Math.min(100, (s.base_stat/180)*100)}%`;
             });
         }, 50);
     }
