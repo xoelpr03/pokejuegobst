@@ -36,7 +36,6 @@
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    /* --- STAT DISPLAY --- */
     .stat-display {
         background: #f8fafc; padding: 15px; border-radius: 20px;
         margin-bottom: 20px; border: 1px solid #e2e8f0; min-height: 180px;
@@ -49,7 +48,7 @@
 
     .stat-label { width: 45px; color: #64748b; text-align: left; }
     .stat-bar-bg { flex-grow: 1; height: 10px; background: #e2e8f0; border-radius: 5px; margin: 0 10px; overflow: hidden; }
-    .stat-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; width: 0; }
+    .stat-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 0; }
     .stat-val { width: 30px; text-align: right; color: #1e293b; }
 
     .bst-badge {
@@ -57,7 +56,6 @@
         color: white; border-radius: 10px; font-size: 12px; margin-top: 10px; font-weight: 800;
     }
 
-    /* --- BUTTONS & MODES --- */
     .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
     .menu-btn {
         display: flex; align-items: center; justify-content: center;
@@ -104,7 +102,6 @@
 <div id="main-menu" class="menu-card">
     <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
     <h1 class="menu-title">Stat Master</h1>
-    
     <div class="btn-group">
         <button class="menu-btn mode-easy" onclick="startGame('easy')">Easy (Any)</button>
         <button class="menu-btn mode-med" onclick="startGame('medium')">Medium (BST Link)</button>
@@ -138,6 +135,7 @@
     let currentScore = 0;
     let targetPoke = null;
     let currentGameMode = 'easy';
+    const evoCache = new Map();
 
     const STAT_LABELS = { 'hp': 'HP', 'attack': 'ATK', 'defense': 'DEF', 'special-attack': 'SPA', 'special-defense': 'SPD', 'speed': 'SPE' };
 
@@ -152,10 +150,11 @@
     }
 
     async function isFullyEvolved(id) {
+        if (evoCache.has(id)) return evoCache.get(id);
         try {
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
             const data = await res.json();
-            if (data.evolves_from_species && !data.evolution_chain) return true; // Edge case
+            if (data.evolves_from_species && !data.evolution_chain) return true;
             const evoRes = await fetch(data.evolution_chain.url);
             const evoData = await evoRes.json();
             let current = evoData.chain;
@@ -166,7 +165,9 @@
                 }
                 if (!found) break;
             }
-            return current.evolves_to.length === 0;
+            const result = current.evolves_to.length === 0;
+            evoCache.set(id, result);
+            return result;
         } catch { return false; }
     }
 
@@ -185,27 +186,27 @@
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         
-        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-variant:small-caps; font-weight:700;'>Calibrating Scanner...</div>";
+        statsDiv.innerHTML = "<div style='padding:40px; color:#94a3b8; font-variant:small-caps; font-weight:700;'>Hyper-Loading Data...</div>";
         optionsDiv.innerHTML = ""; 
 
         try {
+            // TARGET FINDING (PARALLEL)
             let found = false;
             while(!found) {
-                const rId = Math.floor(Math.random() * 898) + 1;
-                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${rId}`);
-                targetPoke = await res.json();
+                const batchIds = Array.from({length: 10}, () => Math.floor(Math.random() * 898) + 1);
+                const candidates = await Promise.all(batchIds.map(id => fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then(r => r.json())));
                 
-                if (currentGameMode === 'hard') {
-                    if (await isFullyEvolved(rId)) found = true;
-                } else {
-                    found = true;
+                for (let p of candidates) {
+                    if (currentGameMode === 'hard') {
+                        if (await isFullyEvolved(p.id)) { targetPoke = p; found = true; break; }
+                    } else { targetPoke = p; found = true; break; }
                 }
             }
 
             renderStats(targetPoke, statsDiv);
-            optionsDiv.innerHTML = "<div style='color:#94a3b8; font-size:11px; font-variant:small-caps;'>Fetching Decoies...</div>";
-
-            const decoys = await fetchDecoys(targetPoke, currentGameMode);
+            
+            // DECOY FETCHING (PARALLEL)
+            const decoys = await fetchDecoysFaster(targetPoke, currentGameMode);
             const choices = [targetPoke, ...decoys].sort(() => Math.random() - 0.5);
             
             optionsDiv.innerHTML = "";
@@ -225,25 +226,13 @@
         } catch(e) { statsDiv.innerHTML = "Sync Error."; }
     }
 
-    function renderStats(poke, container) {
-        let bst = 0;
-        let statHtml = '<div class="stat-display">';
-        poke.stats.forEach(s => {
-            const val = s.base_stat;
-            bst += val;
-            statHtml += `<div class="stat-row"><span class="stat-label">${STAT_LABELS[s.stat.name]}</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${Math.min(100, (val/160)*100)}%; background:${getStatColor(val)};"></div></div><span class="stat-val">${val}</span></div>`;
-        });
-        statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
-        container.innerHTML = statHtml;
-    }
-
-    async function fetchDecoys(target, mode) {
+    async function fetchDecoysFaster(target, mode) {
         const tStats = target.stats.map(s => s.base_stat);
         const tBst = tStats.reduce((a, b) => a + b, 0);
         const decoys = [];
         
         while (decoys.length < 3) {
-            const ids = Array.from({length: 8}, () => Math.floor(Math.random() * 898) + 1);
+            const ids = Array.from({length: 12}, () => Math.floor(Math.random() * 898) + 1);
             const results = await Promise.all(ids.map(async id => {
                 if (id === target.id) return null;
                 const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
@@ -252,22 +241,37 @@
                 const pBst = pStats.reduce((a, b) => a + b, 0);
 
                 if (mode === 'easy') return p;
-                if (mode === 'medium' && Math.abs(pBst - tBst) <= 60) return p;
-
+                if (mode === 'medium' && Math.abs(pBst - tBst) <= 70) return p;
                 if (mode === 'hard') {
-                    // Calculate "Similarity Score" based on all 6 stats
                     let totalDiff = 0;
-                    for(let i=0; i<6; i++) {
-                        totalDiff += Math.abs(tStats[i] - pStats[i]);
-                    }
-                    // Only accept if stats are broadly similar across the board and fully evolved
-                    if (totalDiff <= 100 && Math.abs(pBst - tBst) <= 40 && await isFullyEvolved(id)) return p;
+                    for(let i=0; i<6; i++) totalDiff += Math.abs(tStats[i] - pStats[i]);
+                    if (totalDiff <= 120 && await isFullyEvolved(id)) return p;
                 }
                 return null;
             }));
             results.forEach(p => { if(p && decoys.length < 3 && !decoys.find(d => d.id === p.id)) decoys.push(p); });
         }
         return decoys;
+    }
+
+    function renderStats(poke, container) {
+        let bst = 0;
+        let statHtml = '<div class="stat-display">';
+        poke.stats.forEach(s => {
+            const val = s.base_stat;
+            bst += val;
+            statHtml += `<div class="stat-row"><span class="stat-label">${STAT_LABELS[s.stat.name]}</span><div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-${s.stat.name}" style="background:${getStatColor(val)};"></div></div><span class="stat-val">${val}</span></div>`;
+        });
+        statHtml += `<div class="bst-badge">BST: ${bst}</div></div>`;
+        container.innerHTML = statHtml;
+        
+        // Trigger bar animation after render
+        setTimeout(() => {
+            poke.stats.forEach(s => {
+                const bar = document.getElementById(`bar-${s.stat.name}`);
+                if(bar) bar.style.width = `${Math.min(100, (s.base_stat/160)*100)}%`;
+            });
+        }, 50);
     }
 
     function showGameOver() {
